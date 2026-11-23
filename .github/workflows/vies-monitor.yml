@@ -1,0 +1,37 @@
+name: VIES monitor
+
+on:
+  schedule:
+    # Every 10 minutes (UTC).
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: vies-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore status state
+        uses: actions/cache@v4
+        with:
+          path: vies-status-state.json
+          key: vies-status-state-v1-${{ github.repository_id }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl
+
+      - name: Run monitor
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: php monitor.php
