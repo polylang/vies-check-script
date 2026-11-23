@@ -35,3 +35,19 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: php monitor.php
+
+      - name: Notify Slack on failure
+        if: failure() && !cancelled()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo 'SLACK_WEBHOOK_URL is not set; skipping failure notification.'
+            exit 0
+          fi
+          text=$(printf '%s\n' \
+            '*VIES monitor failed*' \
+            'Workflow: ${{ github.workflow }}' \
+            'Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}')
+          payload=$(jq -n --arg text "$text" '{text: $text}')
+          curl -fsS -X POST -H 'Content-Type: application/json' -d "$payload" "$SLACK_WEBHOOK_URL"
