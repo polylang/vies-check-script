@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Run from the command line only.
  * Store this file and its state file outside public_html.
  *
- * Requires SLACK_WEBHOOK_URL in the environment (cron, systemd, shell export).
+ * SLACK_WEBHOOK_URL: copy .env.example to .env, or set in the environment.
  */
 
 const STATUS_URL = 'https://isviesdown.eu/status.json';
@@ -15,8 +15,51 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
+loadEnvFile(__DIR__ . '/.env');
+
 $stateFile = __DIR__ . '/vies-status-state.json';
 $lockFile  = __DIR__ . '/vies-status-monitor.lock';
+
+function loadEnvFile(string $path): void
+{
+    if (!is_readable($path)) {
+        return;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES);
+    if ($lines === false) {
+        return;
+    }
+
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+
+        $equalsAt = strpos($line, '=');
+        if ($equalsAt === false) {
+            continue;
+        }
+
+        $name = trim(substr($line, 0, $equalsAt));
+        $value = trim(substr($line, $equalsAt + 1));
+
+        if ($name === '' || getenv($name) !== false) {
+            continue;
+        }
+
+        if (
+            strlen($value) >= 2
+            && $value[0] === $value[-1]
+            && ($value[0] === '"' || $value[0] === "'")
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
+        putenv("{$name}={$value}");
+    }
+}
 
 function fetchStatuses(): array
 {
@@ -72,7 +115,7 @@ function slackWebhookUrl(): string
     $url = getenv('SLACK_WEBHOOK_URL');
     if (!is_string($url) || $url === '') {
         throw new RuntimeException(
-            'Set SLACK_WEBHOOK_URL in the environment before running the monitor.'
+            'Set SLACK_WEBHOOK_URL in .env (see .env.example) or in the environment.'
         );
     }
 

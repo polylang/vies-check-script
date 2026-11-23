@@ -1,0 +1,4 @@
+.env
+vies-status-state.json
+vies-status-monitor.lock
+cron.log
