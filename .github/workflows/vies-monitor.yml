@@ -2,8 +2,8 @@ name: VIES monitor
 
 on:
   schedule:
-    # Every 10 minutes (UTC).
-    - cron: '*/10 * * * *'
+    - cron: '0 9 * * *'
+      timezone: Europe/Paris
   workflow_dispatch:
 
 concurrency:
