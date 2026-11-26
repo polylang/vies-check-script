@@ -19,11 +19,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # A cache entry cannot be updated. A unique key misses every run, restore-keys
+      # loads the latest state, and a successful job saves that state under the new key.
       - name: Restore status state
         uses: actions/cache@v4
         with:
           path: vies-status-state.json
-          key: vies-status-state-v1-${{ github.repository_id }}
+          key: vies-status-state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: vies-status-state-
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
