@@ -2,7 +2,7 @@ name: VIES monitor
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 9,14 * * *'
       timezone: Europe/Paris
   workflow_dispatch:
 
