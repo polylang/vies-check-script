@@ -190,6 +190,7 @@ try {
     }
 
     $changes = [];
+    $recovered = false;
 
     foreach ($current as $country => $status) {
         $oldStatus = $previous[$country] ?? null;
@@ -198,6 +199,15 @@ try {
             $changes[] = "🔴 *{$country}* is DOWN";
         } elseif ($status === 'up' && $oldStatus === 'down') {
             $changes[] = "🟢 *{$country}* is back UP";
+            $recovered = true;
+        }
+    }
+
+    if ($recovered) {
+        foreach ($current as $country => $status) {
+            if ($status === 'down' && ($previous[$country] ?? null) === 'down') {
+                $changes[] = "🔴 *{$country}* is still DOWN";
+            }
         }
     }
 
